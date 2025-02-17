@@ -17,7 +17,7 @@ def get_cities(state_id):
     if state is None:
         abort(404)
     all_cities = []
-    for city in state.all_cities:
+    for city in state.cities:
         all_cities.append(city.to_dict())
     return jsonify(all_cities)
 
@@ -45,7 +45,7 @@ def delete_city(city_id):
         abort(404)
     storage.delete(city)
     storage.save()
-    return jsonify({})
+    return jsonify({}), 200
 
 
 @app_views.route(
@@ -59,7 +59,7 @@ def create_city(state_id):
     state = storage.get(State, state_id)
     if state is None:
         abort(404)
-    if "name" not in request.get_json():
+    if "name" not in r:
         abort(400, "Missing name")
     r["state_id"] = state_id
     city = City(**r)

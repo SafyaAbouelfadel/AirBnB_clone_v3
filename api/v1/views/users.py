@@ -37,7 +37,7 @@ def delete_user(user_id):
         abort(404)
     storage.delete(user)
     storage.save()
-    return jsonify({})
+    return jsonify({}), 200
 
 
 @app_views.route("/users", methods=["POST"], strict_slashes=False)
@@ -49,7 +49,7 @@ def create_user():
     if "email" not in r:
         abort(400, "Missing email")
     if "password" not in r:
-        abort(400, "Missing passord")
+        abort(400, "Missing password")
     user = User(**r)
     user.save()
     return make_response(jsonify(user.to_dict()), 201)
