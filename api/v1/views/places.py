@@ -9,6 +9,8 @@ from models.city import City
 from models.user import User
 from models.amenity import Amenity
 from models.state import State
+from os import environ
+STORAGE_TYPE = environ.get('HBNB_TYPE_STORAGE')
 
 
 @app_views.route(
