@@ -14,10 +14,12 @@ app.register_blueprint(app_views)
 
 cors = CORS(app, resources={"/*": {"origins": "0.0.0.0"}})
 
+
 @app.teardown_appcontext
 def close_db(exception):
     """Close the database connection after each request."""
     storage.close()
+
 
 @app.errorhandler(404)
 def not_found(error):

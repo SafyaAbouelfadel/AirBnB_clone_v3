@@ -17,6 +17,7 @@ def api_status():
     if request.method == "GET":
         return jsonify(respond)
 
+
 @app_views.route("/stats")
 def api_stats():
     """
