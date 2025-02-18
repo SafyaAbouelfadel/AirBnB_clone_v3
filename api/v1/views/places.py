@@ -113,57 +113,28 @@ def places_search():
     if body_r is None:
         abort(400, "Not a JSON")
 
-    if not body_r or (
-            not body_r.get('states') and
-            not body_r.get('cities') and
-            not body_r.get('amenities')
-    ):
-        places = storage.all(Place)
-        return jsonify([place.to_dict() for place in places.values()])
+    if not any(body_r.get(k) for k in ["states", "cities", "amenities"]):
+        return jsonify([place.to_dict() for place in storage.all(Place).values()])
 
-    places = []
+    places = set()
 
     if body_r.get('states'):
-        states = [storage.get("State", id) for id in body_r.get('states')]
-
+        states = [storage.get(State, id) for id in body_r.get('states') if storage.get(State, id)]
         for state in states:
             for city in state.cities:
-                for place in city.places:
-                    places.append(place)
+                places.update(city.places)
 
     if body_r.get('cities'):
-        cities = [storage.get("City", id) for id in body_r.get('cities')]
-
+        cities = [storage.get(City, id) for id in body_r.get('cities') if storage.get(City, id)]
         for city in cities:
-            for place in city.places:
-                if place not in places:
-                    places.append(place)
+            places.update(city.places)
 
     if not places:
-        places = storage.all(Place)
-        places = [place for place in places.values()]
+        places = set(storage.all(Place).values())
 
     if body_r.get('amenities'):
-        ams = [storage.get("Amenity", id) for id in body_r.get('amenities')]
-        i = 0
-        limit = len(places)
-        HBNB_API_HOST = getenv('HBNB_API_HOST')
-        HBNB_API_PORT = getenv('HBNB_API_PORT')
+        amenities = {storage.get(Amenity, id) for id in body_r.get('amenities') if storage.get(Amenity, id)}
 
-        port = 5000 if not HBNB_API_PORT else HBNB_API_PORT
-        first_url = "http://0.0.0.0:{}/api/v1/places/".format(port)
-        while i < limit:
-            place = places[i]
-            url = first_url + '{}/amenities'
-            req = url.format(place.id)
-            response = requests.get(req)
-            am_d = json.loads(response.text)
-            amenities = [storage.get("Amenity", o['id']) for o in am_d]
-            for amenity in ams:
-                if amenity not in amenities:
-                    places.pop(i)
-                    i -= 1
-                    limit -= 1
-                    break
-            i += 1
+        places = {place for place in places if all(a in place.amenities for a in amenities)}
+
     return jsonify([place.to_dict() for place in places])
